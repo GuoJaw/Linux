@@ -1,0 +1,107 @@
+#include<pthread.h>
+#include<stdio.h>
+#include<stdlib.h>
+
+#define BUFFERSIZE 16
+#define OVER -1
+struct prodcons
+{
+	int buffer[BUFFERSIZE]; //缓冲区：用于生产者和消费者访问
+
+	pthread_mutex_t lock;
+
+	pthread_cond_t notEmpty;
+	pthread_cond_t notFull;
+
+	int readPos, writePos;
+}buffer;
+
+void init(struct prodcons* buffer)
+{
+	pthread_mutex_init(&buffer->lock, NULL);
+	pthread_cond_init(&buffer->notEmpty, NULL);
+	pthread_cond_init(&buffer->notFull, NULL);
+	buffer->readPos = 0;
+	buffer->writePos = 0;
+}
+void put(struct prodcons* buffer, int data)
+{
+	pthread_mutex_lock(&buffer->lock);
+
+	if ((buffer->writePos + 1) % BUFFERSIZE == buffer->readPos) //buffer满了
+	{
+		printf("buffer满了，不能再生产了...\n");
+		pthread_cond_wait(&buffer->notFull, &buffer->lock);
+	}
+	//buffer没有满，生产产品，并放入buffer
+	buffer->buffer[buffer->writePos] = data;
+	buffer->writePos++;
+	if (buffer->writePos >= BUFFERSIZE)
+		buffer->writePos = 0;
+
+	//生产产品后，buffer不为空--->通知消费者去消费
+	pthread_cond_signal(&buffer->notEmpty); 
+
+	pthread_mutex_unlock(&buffer->lock);
+}
+void* thread_producer(void* arg)
+{
+	for (int i = 0; i < 1000; i++)
+	{
+		printf(" put-->%d\n", i);
+		put(&buffer, i);
+	}
+	put(&buffer, OVER);
+	printf("producer退出...\n");
+	return 0;
+}
+
+int get(struct prodcons* buffer)
+{
+	pthread_mutex_lock(&buffer->lock);
+
+	if (buffer->writePos == buffer->readPos)
+	{
+		printf("缓冲区为空，阻塞get操作...\n");
+		pthread_cond_wait(&buffer->notEmpty, &buffer->lock);
+	}
+	//缓冲区不空，则取获取
+	int res = buffer->buffer[buffer->readPos];
+	buffer->readPos++;
+	if (buffer->readPos >= BUFFERSIZE)
+		buffer->readPos = 0;
+
+	//消费完之后，buffer可能为空--->通知生产者去生产
+	pthread_cond_signal(&buffer->notFull); 
+
+	pthread_mutex_unlock(&buffer->lock);
+	return res;
+}
+void* thread_consumer(void* arg)
+{
+	while (1)
+	{
+		int res = get(&buffer);
+		printf("     get-->%d\n", res);
+		if (res == OVER)
+		{
+			printf("consumer退出...\n");
+			break;
+		}
+	}
+
+	return 0;
+}
+int main()
+{
+	init(&buffer);
+
+	pthread_t ptid, ctid;
+	pthread_create(&ptid, NULL, thread_producer, NULL);
+	pthread_create(&ctid, NULL, thread_consumer, NULL);
+
+	void* res = NULL;
+	pthread_join(ptid, &res);
+	pthread_join(ctid, &res);
+	system("pause");
+}
