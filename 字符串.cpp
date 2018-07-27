@@ -6,8 +6,9 @@ using namespace std;
 1.字符串倒置
 2.I am from shanghai-->shanghai from am I
 3.strstr
-4.字符串拷贝：strcpy和memcpy
-5.循环后移:考察API的使用
+4.atoi:存在前后为空格（两头堵）
+5.字符串拷贝：strcpy和memcpy
+6.循环后移:考察API的使用
 */
 void swap(char& a, char& b){
 	a ^= b;
@@ -56,7 +57,36 @@ char* mystrstr(char* str, char* sub){
 	}
 	return NULL; //没有查到
 }
-//4.字符串拷贝：strcpy和memcpy
+//4.atoi:存在前后为空格（两头堵）
+int myatoi(char* src){  
+	assert(src != NULL);
+	char* start = src;
+	char* end = src + strlen(src) - 1;
+	//去除两端的空格
+	while (*start++ == ' '); start--;
+	while (*end-- == ' '); end++;
+	//判断第一个字符是否有符号
+	bool flag; //flag=true表示正数
+	switch (*start){
+	case '-':
+		flag = false; start++; break;
+	case '+':
+		flag = true; start++; break;
+	default:
+		flag = true;
+	}
+	const char* ch = start;
+	int num = 0;
+	while (ch != end + 1){
+		int cur_num = *ch - '0';
+		num = num * 10 + cur_num;
+		ch++;
+	}
+	if (flag != true)
+		return -num;
+	return num;
+}
+//5.字符串拷贝：strcpy和memcpy
 char* mystrcpy(char* dst, const char* src){
 	assert((dst != NULL) && (src != NULL));
 	char* tmp = dst; //备份dst
@@ -73,7 +103,7 @@ void* mymemcpy(void* dst, const void* src, size_t size){
 	}
 	return dst;
 }
-//5.循环后移:考察API的使用
+//6.循环后移:考察API的使用
 void loopstep(char* src,int steps){
 	assert(src);
 	int len = strlen(src) - steps;
@@ -82,16 +112,7 @@ void loopstep(char* src,int steps){
 	memcpy(src + steps, src, len);
 	memcpy(src, buf, steps);
 }
-//strcat
-void mystrcat(char* dst, const char* src){
-	assert((dst != NULL) && (src != NULL));
 
-	int len = strlen(dst) + strlen(src);
-	char* newstr = (char*)malloc(len + 1);
-
-	while (*dst != '\0') //查询dst的
-		dst++;
-}
 void test01(){
 	char A[] = "I am from shanghai   ";
 	myReverse3(A);
@@ -112,7 +133,10 @@ void test03(){
 		cout << "查找substr失败" << endl;
 	system("pause");
 }
-
+void test04(){
+	char A[] = "   -123456   ";
+	int num = myatoi(A);
+}
 int main(){
-	test02();
+	test04();
 }
