@@ -63,7 +63,7 @@ int myatoi(char* src){
 	char* start = src;
 	char* end = src + strlen(src) - 1;
 	//去除两端的空格
-	while (*start++ == ' '); start--;
+	while (*start++ == ' '); start--; //查找左边起第一个不为' '的元素位置:需要回退一个start--
 	while (*end-- == ' '); end++;
 	//判断第一个字符是否有符号
 	bool flag; //flag=true表示正数
