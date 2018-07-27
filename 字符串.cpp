@@ -58,6 +58,11 @@ char* mystrstr(char* str, char* sub){
 	return NULL; //没有查到
 }
 //4.atoi:存在前后为空格（两头堵）
+/*
+(1)去除两段的' '
+(2)判断左面第一个元素是否为符号:+和-
+(3)从左到右，一次取出每个值，再计算:num = num * 10 + (*ch - '0');
+*/
 int myatoi(char* src){  
 	assert(src != NULL);
 	char* start = src;
@@ -78,8 +83,7 @@ int myatoi(char* src){
 	const char* ch = start;
 	int num = 0;
 	while (ch != end + 1){
-		int cur_num = *ch - '0';
-		num = num * 10 + cur_num;
+		num = num * 10 + (*ch - '0');
 		ch++;
 	}
 	if (flag != true)
